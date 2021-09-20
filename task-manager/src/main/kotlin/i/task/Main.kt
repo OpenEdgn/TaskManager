@@ -1,5 +1,4 @@
-package com.github.template
-
+package i.task
 
 class Main
 
