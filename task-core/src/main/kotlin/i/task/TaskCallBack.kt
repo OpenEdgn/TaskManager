@@ -18,7 +18,7 @@ class TaskCallBack<RES : Any> private constructor(
         /**
          * 只处理失败回调
          */
-        fun fail(fail: (Throwable) -> Unit) = TaskCallBack<Any>(success = {}, fail = fail)
+        fun <T : Any> fail(fail: (Throwable) -> Unit) = TaskCallBack<T>(success = {}, fail = fail)
 
         /**
          * 自定义任务处理建造者

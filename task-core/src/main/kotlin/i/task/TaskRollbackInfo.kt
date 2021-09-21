@@ -20,9 +20,9 @@ data class TaskRollbackInfo(
 
     enum class RollbackType {
         CURRENT_CHECK_ERROR,
-        NEXT_CHECK_ERROR,
+        OTHER_CHECK_ERROR,
         CURRENT_RUN_ERROR,
-        NEXT_RUN_ERROR,
+        OTHER_RUN_ERROR,
         USER_CANCEL
     }
 }

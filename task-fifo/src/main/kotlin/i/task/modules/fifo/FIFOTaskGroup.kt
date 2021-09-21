@@ -7,6 +7,9 @@ import i.task.TaskException.CheckFailException
 import i.task.TaskRollbackInfo
 import i.task.TaskRollbackInfo.RollbackType
 import i.task.TaskStatus
+import org.slf4j.LoggerFactory
+import org.slf4j.Marker
+import org.slf4j.MarkerFactory
 import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
@@ -21,6 +24,9 @@ class FIFOTaskGroup<RES : Any>(
     override val tasks: List<ITask<*>>,
     private val call: TaskCallBack<RES>
 ) : IFIFOTaskGroup<RES>, ITaskGroupOptions {
+    private val marker: Marker by lazy {
+        MarkerFactory.getMarker("任务组：\"$name\"")
+    }
 
     @Volatile
     var status: TaskStatus = TaskStatus.READY
@@ -45,9 +51,11 @@ class FIFOTaskGroup<RES : Any>(
 
     override fun run() {
         synchronized(tasksWrapper) {
+            logger.debug(marker, "开始执行此任务组.")
             status = TaskStatus.RUNNING
             for (value in tasksWrapper) {
                 if (fail.get()) {
+                    logger.debug(marker, "任务组监测到停止信号，中止任务组.")
                     break
                 }
                 realTask = value
@@ -62,9 +70,11 @@ class FIFOTaskGroup<RES : Any>(
                     }
                 } else {
                     // 触发回滚
+                    logger.debug(marker, "任务 \"{}\" 前置校验失败.", value.key)
                     throw CheckFailException(value.key)
                 }
                 value.process = 1f
+                logger.debug(marker, "任务 \"{}\" 结束.", value.key)
             }
         }
         // 执行方法
@@ -83,22 +93,23 @@ class FIFOTaskGroup<RES : Any>(
         fail.set(true)
         synchronized(tasksWrapper) { // 等待执行线程释放锁
             val last = count.get()
-            val error = when (info.type) {
+            val anotherError = when (info.type) {
                 RollbackType.CURRENT_CHECK_ERROR ->
-                    RollbackType.NEXT_CHECK_ERROR
+                    RollbackType.OTHER_CHECK_ERROR
 
                 RollbackType.CURRENT_RUN_ERROR ->
-                    RollbackType.NEXT_RUN_ERROR
+                    RollbackType.OTHER_RUN_ERROR
                 else -> info.type
             }
             status = TaskStatus.ERROR
-            val anotherInfo = TaskRollbackInfo(error, info.error)
+            val anotherInfo = TaskRollbackInfo(anotherError, info.error)
             for (value in (0..last).reversed()) {
                 try {
-                    if (last == value) {
-                        tasksWrapper[value].task.rollback(info)
+                    val fifoTask = tasksWrapper[value]
+                    if ((last - 1) == value) {
+                        fifoTask.task.rollback(info)
                     } else {
-                        tasksWrapper[value].task.rollback(anotherInfo)
+                        fifoTask.task.rollback(anotherInfo)
                     }
                 } catch (e: Throwable) {
                 }
@@ -125,6 +136,7 @@ class FIFOTaskGroup<RES : Any>(
 
     override fun close() {
         // 清除
+        logger.debug(marker, "开始销毁任务.")
         for (value in (0 until tasksWrapper.size).reversed()) {
             try {
                 tasksWrapper[value].task.close()
@@ -135,5 +147,10 @@ class FIFOTaskGroup<RES : Any>(
         status = TaskStatus.FINISH
         tasksWrapper.clear()
         properties.clear()
+        logger.debug(marker, "任务组已销毁.")
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(FIFOTaskGroup::class.java)
     }
 }

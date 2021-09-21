@@ -1,4 +1,4 @@
-package samples
+package samples.one
 
 import i.task.ITask
 import i.task.ITaskContext

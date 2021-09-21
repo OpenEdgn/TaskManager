@@ -15,6 +15,7 @@ import java.util.Optional
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
@@ -23,19 +24,22 @@ import java.util.concurrent.locks.ReentrantLock
  *
  *
  */
-class FIFOTaskManager : ITaskManager, ITaskInfo {
-    override val name: String = "FIFO"
-    private val marker = MarkerFactory.getMarker(name)
+class FIFOTaskManager(
+    override val name: String = "FIFO",
+    threadFactory: ThreadFactory = Executors.defaultThreadFactory(),
+    threadPool: ExecutorService = Executors.newCachedThreadPool()
+) : ITaskManager, ITaskInfo {
+    private val marker = MarkerFactory.getMarker("任务管理器：\"$name\"")
 
     private val shutdown = AtomicBoolean(false)
     private val lock = ReentrantLock()
     private val condition = lock.newCondition() // 锁
     private val taskGroups = LinkedBlockingDeque<IFIFOTaskGroup<Any>>() // 任务组
-    private val userCallbackThread: ExecutorService = Executors.newCachedThreadPool() // 任务回调执行线程
+    private val callBackThreadPool: ExecutorService = threadPool // 任务回调执行线程
     private val tasks = Collections.synchronizedSet(HashSet<ITask<*>>())
 
     init {
-        val thread = Thread {
+        val thread = threadFactory.newThread {
             while (taskGroups.isNotEmpty() || shutdown.get().not()) {
                 if (taskGroups.isEmpty()) {
                     lock.lock()
@@ -57,7 +61,7 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
      */
     private fun clear() {
         logger.debug(marker, "任务管理器实例已退出.")
-        userCallbackThread.shutdown()
+        callBackThreadPool.shutdown()
     }
 
     private fun runTaskGroup() { // 任务队列
@@ -65,9 +69,9 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
         val taskGroup: IFIFOTaskGroup<Any> = taskGroups.pollFirst() ?: return
         try {
             taskGroup.run() // 执行任务
-        } catch (e: TaskException.CheckFailException) {
         } catch (e: Throwable) {
             try { // 发生错误，触发任务回滚
+                logger.debug(marker, "任务组 \"{}\" 发生故障，开始回滚.", taskGroup.name)
                 error = Optional.of(e)
                 val type = if (e is TaskException.CheckFailException) {
                     RollbackType.CURRENT_CHECK_ERROR
@@ -84,7 +88,7 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
             }
         }
         taskGroup.callBack(
-            userCallbackThread, error
+            callBackThreadPool, error
         )
         condition.tryLock {
             tasks.removeAll(taskGroup.tasks)
@@ -121,7 +125,7 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
     }
 
     override fun shutdown() = condition.tryLock {
-        logger.debug(marker, "开始销毁")
+        logger.debug(marker, "收到销毁信号，从此刻开始不再接收新任务.")
         shutdown.set(true)
         lock.lock()
         condition.signalAll()
