@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm")
     `maven-publish`
-    id("org.jmailen.kotlinter")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 java.sourceCompatibility = JavaVersion.VERSION_11
