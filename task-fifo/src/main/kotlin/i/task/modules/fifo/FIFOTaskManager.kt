@@ -8,6 +8,8 @@ import i.task.TaskCallBack
 import i.task.TaskException
 import i.task.TaskRollbackInfo
 import i.task.TaskRollbackInfo.RollbackType
+import org.slf4j.LoggerFactory
+import org.slf4j.MarkerFactory
 import java.util.Collections
 import java.util.Optional
 import java.util.concurrent.Executors
@@ -21,6 +23,9 @@ import java.util.concurrent.locks.ReentrantLock
  *
  */
 class FIFOTaskManager : ITaskManager, ITaskInfo {
+    override val name: String = "FIFO"
+    private val marker = MarkerFactory.getMarker(name)
+
     private val shutdown = AtomicBoolean(false)
     private val lock = ReentrantLock()
     private val condition = lock.newCondition() // 锁
@@ -35,17 +40,21 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
                     lock.lock()
                     condition.await()
                     lock.unlock()
+                } else {
+                    runTaskGroup()
                 }
-                runTaskGroup()
             }
             clear()
         }.start()
+        logger.debug(marker, "工作线程已启动.")
     }
 
     /**
      * 生命周期结束，清除
      */
     private fun clear() {
+        logger.debug(marker, "任务管理器实例${name}已退出.")
+        userCallbackThread.shutdown()
     }
 
     private fun runTaskGroup() { // 任务队列
@@ -80,10 +89,10 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
     }
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any, RES : Any> submit(
+    override fun <RES : Any> submit(
         name: String,
         task: List<ITask<*>>,
-        call: TaskCallBack<T, RES>
+        call: TaskCallBack<RES>
     ): ITaskStatus<RES> {
         val result = condition.tryLock {
             if (task.isEmpty()) {
@@ -104,12 +113,16 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
                 throw RuntimeException("某些任务已存在于队列中，在此任务停止之前不允许添加相同任务！")
             }
         }
-        call.putHook()
+        call.putHook(result)
         return result
     }
 
     override fun shutdown() = condition.tryLock {
+        logger.debug(marker, "开始销毁 ")
         shutdown.set(true)
+        lock.lock()
+        condition.signalAll()
+        lock.unlock()
     }
 
     override val process: Float
@@ -130,5 +143,9 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
         return synchronized(this) {
             function()
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(FIFOTaskManager::class.java)
     }
 }

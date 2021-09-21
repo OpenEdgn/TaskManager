@@ -16,14 +16,14 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * 任务组
  */
-class FIFOTaskGroup<T : Any, RES : Any>(
+class FIFOTaskGroup<RES : Any>(
     override val name: String,
     override val tasks: List<ITask<*>>,
-    private val call: TaskCallBack<T, RES>
+    private val call: TaskCallBack<RES>
 ) : IFIFOTaskGroup<RES>, ITaskGroupOptions {
 
     @Suppress("UNCHECKED_CAST")
-    override val taskStatusCall = FIFOTaskStatus(this as FIFOTaskGroup<Any, RES>)
+    override val taskStatusCall = FIFOTaskStatus(this)
 
     private val tasksWrapper = ArrayList<FIFOTask>(tasks.map { FIFOTask(it, this) })
 
@@ -110,7 +110,7 @@ class FIFOTaskGroup<T : Any, RES : Any>(
             }
         } else {
             threadPool.submit {
-                call.success(lastTaskResult<T>().get())
+                call.success(lastTaskResult<RES>().get())
             }
         }
     }

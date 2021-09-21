@@ -5,7 +5,7 @@ import i.task.TaskRollbackInfo
 import i.task.TaskStatus
 import java.util.Optional
 
-class FIFOTaskStatus<RES : Any>(private val fifoTaskGroup: FIFOTaskGroup<Any, RES>) : ITaskStatus<RES> {
+class FIFOTaskStatus<RES : Any>(private val fifoTaskGroup: FIFOTaskGroup<RES>) : ITaskStatus<RES> {
     override var status: TaskStatus = TaskStatus.READY
     override val value: Optional<RES>
         get() = fifoTaskGroup.lastTaskResult()

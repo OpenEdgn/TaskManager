@@ -1,16 +1,12 @@
 package i.task
 
-import java.util.concurrent.locks.ReentrantLock
-
 /**
  * 任务回调函数
- * @property success Function1<T, Unit> 成功回调
- * @property fail Function1<Throwable, Unit> 失败回调
  */
-class TaskCallBack<T : Any, RES : Any?> private constructor(
-    val success: (T) -> RES,
-    val fail: (Throwable) -> RES,
-    val putHook: () -> Unit = {}
+class TaskCallBack<RES : Any> private constructor(
+    val success: (RES) -> Unit,
+    val fail: (Throwable) -> Unit,
+    val putHook: (ITaskStatus<RES>) -> Unit = {}
 ) {
 
     companion object {
@@ -22,50 +18,45 @@ class TaskCallBack<T : Any, RES : Any?> private constructor(
         /**
          * 只处理失败回调
          */
-        fun fail(fail: (Throwable) -> Unit) = TaskCallBack<Any, Unit>(success = {}, fail = fail)
+        fun fail(fail: (Throwable) -> Unit) = TaskCallBack<Any>(success = {}, fail = fail)
 
         /**
          * 自定义任务处理建造者
          */
-        fun <T : Any, RES : Any?> builder() = TaskCallBackBuilder<T, RES>()
+        fun <RES : Any> builder() = TaskCallBackBuilder<RES>()
 
         /**
          *  等待任务结束返回
          */
-        fun <T : Any> join(defaultValue: T? = null): TaskCallBack<T, T?> {
-            val lock = ReentrantLock()
-            val condition = lock.newCondition()
-            val call: () -> Unit = {
-                condition.signalAll()
-            }
-            return builder<T, T?>()
-                .success {
-                    call()
-                    it
-                }.fail {
-                    defaultValue
-                }.putHook {
-                    condition.await()
-                }.build()
+        fun <T : Any> join(): TaskCallBack<T> {
+
+            return builder<T>().putHook {
+                while (true) {
+                    if (it.status == TaskStatus.FINISH) {
+                        break
+                    }
+                    Thread.sleep(100)
+                }
+            }.build()
         }
 
-        class TaskCallBackBuilder<T : Any, RES : Any?> {
+        class TaskCallBackBuilder<RES : Any> {
 
-            private lateinit var success: (T) -> RES
-            private lateinit var fail: (Throwable) -> RES
-            private var putHook: () -> Unit = {}
+            private var success: (RES) -> Unit = {}
+            private var fail: (Throwable) -> Unit = {}
+            private var putHook: (ITaskStatus<RES>) -> Unit = {}
 
-            fun success(success: (T) -> RES) = kotlin.run {
+            fun success(success: (RES) -> Unit) = kotlin.run {
                 this.success = success
                 this
             }
 
-            fun fail(fail: (Throwable) -> RES) = kotlin.run {
+            fun fail(fail: (Throwable) -> Unit) = kotlin.run {
                 this.fail = fail
                 this
             }
 
-            internal fun putHook(hook: () -> Unit) = kotlin.run {
+            internal fun putHook(hook: (ITaskStatus<RES>) -> Unit) = kotlin.run {
                 this.putHook = hook
                 this
             }

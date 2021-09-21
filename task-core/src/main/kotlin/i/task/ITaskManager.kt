@@ -5,6 +5,11 @@ package i.task
  */
 interface ITaskManager {
     /**
+     * 任务管理器名称
+     */
+    val name: String
+
+    /**
      * 获取任务信息
      *
      */
@@ -19,10 +24,10 @@ interface ITaskManager {
      * @param call Function1<T, Unit> 任务回调
      * @return String 返回任务 ID，可根据任务ID 取消对应任务
      */
-    fun <T : Any, RES : Any> submit(
+    fun <RES : Any> submit(
         name: String,
         task: List<ITask<*>>,
-        call: TaskCallBack<T, RES>
+        call: TaskCallBack<RES>
     ): ITaskStatus<RES>
 
     /**
