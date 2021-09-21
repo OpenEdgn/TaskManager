@@ -14,8 +14,8 @@ class FIFOTask(
 ) : IFIFOTask, ITaskContext, ITaskOptions {
     @Volatile
     override var process: Float = 0f
-    val name: String
-        get() = task.name
+    val key: String
+        get() = task.key
 
     override fun currentGroup() = taskGroup
 

@@ -32,7 +32,7 @@ class TaskCallBack<RES : Any> private constructor(
 
             return builder<T>().putHook {
                 while (true) {
-                    if (it.status == TaskStatus.FINISH) {
+                    if (it.status == TaskStatus.FINISH || it.status == TaskStatus.ERROR) {
                         break
                     }
                     Thread.sleep(100)

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 import java.util.Collections
 import java.util.Optional
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.atomic.AtomicBoolean
@@ -30,11 +31,11 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
     private val lock = ReentrantLock()
     private val condition = lock.newCondition() // 锁
     private val taskGroups = LinkedBlockingDeque<IFIFOTaskGroup<Any>>() // 任务组
-    private val userCallbackThread = Executors.newCachedThreadPool() // 任务回调执行线程
+    private val userCallbackThread: ExecutorService = Executors.newCachedThreadPool() // 任务回调执行线程
     private val tasks = Collections.synchronizedSet(HashSet<ITask<*>>())
 
     init {
-        Thread {
+        val thread = Thread {
             while (taskGroups.isNotEmpty() || shutdown.get().not()) {
                 if (taskGroups.isEmpty()) {
                     lock.lock()
@@ -45,7 +46,9 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
                 }
             }
             clear()
-        }.start()
+        }
+        thread.name = name
+        thread.start()
         logger.debug(marker, "工作线程已启动.")
     }
 
@@ -53,7 +56,7 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
      * 生命周期结束，清除
      */
     private fun clear() {
-        logger.debug(marker, "任务管理器实例${name}已退出.")
+        logger.debug(marker, "任务管理器实例已退出.")
         userCallbackThread.shutdown()
     }
 
@@ -118,7 +121,7 @@ class FIFOTaskManager : ITaskManager, ITaskInfo {
     }
 
     override fun shutdown() = condition.tryLock {
-        logger.debug(marker, "开始销毁 ")
+        logger.debug(marker, "开始销毁")
         shutdown.set(true)
         lock.lock()
         condition.signalAll()

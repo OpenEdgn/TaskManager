@@ -22,6 +22,9 @@ class FIFOTaskGroup<RES : Any>(
     private val call: TaskCallBack<RES>
 ) : IFIFOTaskGroup<RES>, ITaskGroupOptions {
 
+    @Volatile
+    var status: TaskStatus = TaskStatus.READY
+
     @Suppress("UNCHECKED_CAST")
     override val taskStatusCall = FIFOTaskStatus(this)
 
@@ -42,7 +45,7 @@ class FIFOTaskGroup<RES : Any>(
 
     override fun run() {
         synchronized(tasksWrapper) {
-
+            status = TaskStatus.RUNNING
             for (value in tasksWrapper) {
                 if (fail.get()) {
                     break
@@ -59,7 +62,7 @@ class FIFOTaskGroup<RES : Any>(
                     }
                 } else {
                     // 触发回滚
-                    throw CheckFailException(value.name)
+                    throw CheckFailException(value.key)
                 }
                 value.process = 1f
             }
@@ -88,9 +91,9 @@ class FIFOTaskGroup<RES : Any>(
                     RollbackType.NEXT_RUN_ERROR
                 else -> info.type
             }
-            taskStatusCall.status = TaskStatus.ERROR
+            status = TaskStatus.ERROR
             val anotherInfo = TaskRollbackInfo(error, info.error)
-            for (value in last..0) {
+            for (value in (0..last).reversed()) {
                 try {
                     if (last == value) {
                         tasksWrapper[value].task.rollback(info)
@@ -122,14 +125,14 @@ class FIFOTaskGroup<RES : Any>(
 
     override fun close() {
         // 清除
-        for (value in tasksWrapper.size until 0) {
+        for (value in (0 until tasksWrapper.size).reversed()) {
             try {
                 tasksWrapper[value].task.close()
                 // 清除缓存
             } catch (e: Throwable) {
             }
         }
-        taskStatusCall.status = TaskStatus.FINISH
+        status = TaskStatus.FINISH
         tasksWrapper.clear()
         properties.clear()
     }

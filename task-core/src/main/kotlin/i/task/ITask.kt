@@ -10,10 +10,10 @@ import java.io.Serializable
 interface ITask<T : Any> : Closeable, Serializable {
 
     /**
-     * 任务名称
+     * 任务名称，确定任务唯一性的标志
      */
 
-    val name: String
+    val key: String
 
     /**
      * 任务前置测试

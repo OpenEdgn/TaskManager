@@ -14,7 +14,7 @@ interface IFIFOTaskGroup<RES : Any> : Runnable, Closeable {
     val name: String
 
     /**
-     * 任务状态信息1
+     * 任务状态信息
      */
     val taskStatusCall: FIFOTaskStatus<RES>
 
