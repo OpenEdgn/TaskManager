@@ -18,11 +18,11 @@ class OneErrorTaskTest : ITask<String> {
         @JvmStatic
         fun main(args: Array<String>) {
             val mgr = FIFOTaskManager()
-            mgr.submit<String>(
+            mgr.submit(
                 "first", listOf(OneErrorTaskTest()),
-                TaskCallBack.success {
-                    logger.info("任务回调完成！返回: {}", it)
-                }
+                TaskCallBack.builder<String>().fail {
+                    logger.info("任务执行失败", it)
+                }.build()
             )
             mgr.shutdown()
         }
