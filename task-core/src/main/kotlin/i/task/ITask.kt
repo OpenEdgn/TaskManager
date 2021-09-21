@@ -36,7 +36,7 @@ interface ITask<T : Any> : Closeable, Serializable {
      *
      * 当一组任务发生错误时，调用此函数进行回滚，此函数产生的错误将被忽略
      */
-    fun rollback(info: ITaskRollbackInfo)
+    fun rollback(info: TaskRollbackInfo)
 
     /**
      * 任务销毁函数

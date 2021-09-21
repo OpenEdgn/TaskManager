@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm")
     `maven-publish`
+    id("org.jmailen.kotlinter")
 }
 java.sourceCompatibility = JavaVersion.VERSION_11
 
@@ -14,9 +15,13 @@ java {
     modularity.inferModulePath.set(true)
 }
 
+val slf4jVersion = rootProject.ext.get("versions.slf4j")
 dependencies {
     implementation(kotlin("reflect"))
     implementation(kotlin("stdlib"))
+    implementation(project(":task-core"))
+    implementation("org.slf4j:slf4j-api:$slf4jVersion")
+    testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     testImplementation("org.junit.platform:junit-platform-launcher:1.6.2")
 }

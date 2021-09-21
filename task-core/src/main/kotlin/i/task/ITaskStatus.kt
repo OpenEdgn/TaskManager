@@ -5,7 +5,7 @@ import java.util.Optional
 /**
  * 任务信息
  */
-interface ITaskStatus<T : Any, RES : Any> {
+interface ITaskStatus<RES : Any> {
     /**
      * 任务当前状态
      */
@@ -22,9 +22,8 @@ interface ITaskStatus<T : Any, RES : Any> {
     val process: Float
 
     /**
-     * 撤销任务
+     * 撤销/终止任务
      *
-     * 注意：仅在任务未执行时可撤销
      */
-    fun cancel(): Boolean
+    fun cancel()
 }

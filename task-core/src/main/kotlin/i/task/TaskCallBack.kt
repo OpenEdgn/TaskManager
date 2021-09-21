@@ -1,5 +1,7 @@
 package i.task
 
+import java.util.concurrent.locks.ReentrantLock
+
 /**
  * 任务回调函数
  * @property success Function1<T, Unit> 成功回调
@@ -7,8 +9,10 @@ package i.task
  */
 class TaskCallBack<T : Any, RES : Any?> private constructor(
     val success: (T) -> RES,
-    val fail: (Throwable) -> RES
+    val fail: (Throwable) -> RES,
+    val putHook: () -> Unit = {}
 ) {
+
     companion object {
         /**
          * 只处理成功回调
@@ -29,7 +33,10 @@ class TaskCallBack<T : Any, RES : Any?> private constructor(
          *  等待任务结束返回
          */
         fun <T : Any> join(defaultValue: T? = null): TaskCallBack<T, T?> {
+            val lock = ReentrantLock()
+            val condition = lock.newCondition()
             val call: () -> Unit = {
+                condition.signalAll()
             }
             return builder<T, T?>()
                 .success {
@@ -37,6 +44,8 @@ class TaskCallBack<T : Any, RES : Any?> private constructor(
                     it
                 }.fail {
                     defaultValue
+                }.putHook {
+                    condition.await()
                 }.build()
         }
 
@@ -44,6 +53,7 @@ class TaskCallBack<T : Any, RES : Any?> private constructor(
 
             private lateinit var success: (T) -> RES
             private lateinit var fail: (Throwable) -> RES
+            private var putHook: () -> Unit = {}
 
             fun success(success: (T) -> RES) = kotlin.run {
                 this.success = success
@@ -55,7 +65,12 @@ class TaskCallBack<T : Any, RES : Any?> private constructor(
                 this
             }
 
-            fun build() = TaskCallBack(success, fail)
+            internal fun putHook(hook: () -> Unit) = kotlin.run {
+                this.putHook = hook
+                this
+            }
+
+            fun build() = TaskCallBack(success, fail, putHook)
         }
     }
 }
