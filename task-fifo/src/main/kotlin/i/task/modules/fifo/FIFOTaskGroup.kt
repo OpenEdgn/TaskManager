@@ -160,7 +160,10 @@ class FIFOTaskGroup<RES : Any>(
     }
 
     fun tryExit() {
-        logger.info("发送任务组手动终止信号.")
+        if (status == TaskStatus.FINISH) {
+            return
+        }
+        logger.debug(marker, "发送任务组手动终止信号.")
         userCancel.set(true)
     }
 
