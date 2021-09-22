@@ -38,7 +38,7 @@ class ManyTaskUserExitTest {
 
     class TaskB : SimpleTask<String>("taskB") {
         override fun run(context: ITaskContext): String {
-            logger.info(marker, "上个任务回调：{}", context.currentGroup().lastTaskResult<Any>())
+            logger.info(marker, "上个任务回调：{}", context.currentGroup.lastTaskResult<Any>())
             logger.info(marker, "启动B任务")
             Thread.sleep(4000)
             return "second"
@@ -47,7 +47,7 @@ class ManyTaskUserExitTest {
 
     class TaskC : SimpleTask<String>("taskC") {
         override fun run(context: ITaskContext): String {
-            logger.info(marker, "上个任务回调：{}", context.currentGroup().lastTaskResult<Any>())
+            logger.info(marker, "上个任务回调：{}", context.currentGroup.lastTaskResult<Any>())
             logger.info(marker, "启动B任务")
             Thread.sleep(4000)
             return "second"

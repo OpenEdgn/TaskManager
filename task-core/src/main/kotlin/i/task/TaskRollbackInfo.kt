@@ -25,4 +25,10 @@ data class TaskRollbackInfo(
         OTHER_RUN_ERROR,
         USER_CANCEL
     }
+
+    val isCurrentError: Boolean
+        get() = type in listOf(
+            RollbackType.CURRENT_CHECK_ERROR,
+            RollbackType.CURRENT_RUN_ERROR,
+        )
 }

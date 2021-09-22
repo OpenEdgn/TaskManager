@@ -71,7 +71,7 @@ class FIFOTaskManager(
             taskGroup.run() // 执行任务
         } catch (e: Throwable) {
             try { // 发生错误，触发任务回滚
-                logger.debug(marker, "任务组 \"{}\" 发生问题 \"{}\"，开始回滚.", taskGroup.name, e.message ?: "")
+                logger.debug(marker, "任务组 \"{}\" 发生错误：\"{}\"，执行回滚.", taskGroup.name, e.message ?: "")
                 error = Optional.of(e)
                 val type = when (e) {
                     is TaskException.CheckFailException -> {

@@ -17,9 +17,11 @@ class FIFOTask(
     val key: String
         get() = task.key
 
-    override fun currentGroup() = taskGroup
+    override val currentGroup: ITaskGroupOptions
+        get() = taskGroup
 
-    override fun currentTask() = this
+    override val currentTask: ITaskOptions
+        get() = this
 
     override fun updateProcess(process: Float) {
         if (process > 1 || process < 0) {
