@@ -2,8 +2,13 @@ package i.task
 
 /**
  * 任务回调函数
+ *
+ * @property success Function1<RES, Unit> 成功异步回调
+ * @property fail Function1<Throwable, Unit> 失败异步回调
+ * @property putHook Function1<ITaskStatus<RES>, Unit> 提交钩子
  */
 class TaskCallBack<RES : Any> private constructor(
+
     val success: (RES) -> Unit,
     val fail: (Throwable) -> Unit,
     val putHook: (ITaskStatus<RES>) -> Unit = {}
@@ -56,7 +61,7 @@ class TaskCallBack<RES : Any> private constructor(
                 this
             }
 
-            internal fun putHook(hook: (ITaskStatus<RES>) -> Unit) = kotlin.run {
+            fun putHook(hook: (ITaskStatus<RES>) -> Unit) = kotlin.run {
                 this.putHook = hook
                 this
             }

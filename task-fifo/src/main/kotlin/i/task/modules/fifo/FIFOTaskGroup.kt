@@ -3,6 +3,7 @@ package i.task.modules.fifo
 import i.task.ITask
 import i.task.ITaskGroupOptions
 import i.task.TaskCallBack
+import i.task.TaskException
 import i.task.TaskException.CheckFailException
 import i.task.TaskRollbackInfo
 import i.task.TaskRollbackInfo.RollbackType
@@ -44,6 +45,8 @@ class FIFOTaskGroup<RES : Any>(
 
     private val fail = AtomicBoolean(false)
 
+    private val userCancel = AtomicBoolean(false)
+
     private var lastTaskResult: Optional<Any> = Optional.empty()
 
     @Volatile
@@ -55,8 +58,11 @@ class FIFOTaskGroup<RES : Any>(
             status = TaskStatus.RUNNING
             for (value in tasksWrapper) {
                 if (fail.get()) {
-                    logger.debug(marker, "任务组监测到停止信号，中止任务组.")
+                    logger.debug(marker, "任务组监测到停止信号，中止任务组,当前任务代号：{}.", count.get())
                     break
+                }
+                if (userCancel.get()) {
+                    throw TaskException.UserExitException(name)
                 }
                 realTask = value
                 count.addAndGet(1)
@@ -103,7 +109,7 @@ class FIFOTaskGroup<RES : Any>(
             }
             status = TaskStatus.ERROR
             val anotherInfo = TaskRollbackInfo(anotherError, info.error)
-            for (value in (0..last).reversed()) {
+            for (value in (0 until last).reversed()) {
                 try {
                     val fifoTask = tasksWrapper[value]
                     if ((last - 1) == value) {
@@ -136,18 +142,26 @@ class FIFOTaskGroup<RES : Any>(
 
     override fun close() {
         // 清除
-        logger.debug(marker, "开始销毁任务.")
-        for (value in (0 until tasksWrapper.size).reversed()) {
-            try {
-                tasksWrapper[value].task.close()
-                // 清除缓存
-            } catch (e: Throwable) {
+        synchronized(tasksWrapper) {
+            logger.debug(marker, "开始销毁任务.")
+            for (value in (0 until tasksWrapper.size).reversed()) {
+                try {
+                    tasksWrapper[value].task.close()
+                    // 清除缓存
+                } catch (e: Throwable) {
+                }
             }
         }
+
         status = TaskStatus.FINISH
         tasksWrapper.clear()
         properties.clear()
         logger.debug(marker, "任务组已销毁.")
+    }
+
+    fun tryExit() {
+        logger.info("发送任务组手动终止信号.")
+        userCancel.set(true)
     }
 
     companion object {

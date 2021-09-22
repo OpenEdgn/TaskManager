@@ -71,12 +71,18 @@ class FIFOTaskManager(
             taskGroup.run() // 执行任务
         } catch (e: Throwable) {
             try { // 发生错误，触发任务回滚
-                logger.debug(marker, "任务组 \"{}\" 发生故障，开始回滚.", taskGroup.name)
+                logger.debug(marker, "任务组 \"{}\" 发生问题 \"{}\"，开始回滚.", taskGroup.name, e.message ?: "")
                 error = Optional.of(e)
-                val type = if (e is TaskException.CheckFailException) {
-                    RollbackType.CURRENT_CHECK_ERROR
-                } else {
-                    RollbackType.CURRENT_RUN_ERROR
+                val type = when (e) {
+                    is TaskException.CheckFailException -> {
+                        RollbackType.CURRENT_CHECK_ERROR
+                    }
+                    is TaskException.UserExitException -> {
+                        RollbackType.USER_CANCEL
+                    }
+                    else -> {
+                        RollbackType.CURRENT_RUN_ERROR
+                    }
                 }
                 taskGroup.cancel(TaskRollbackInfo(type, error))
             } catch (_: Throwable) {
