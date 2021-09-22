@@ -17,11 +17,7 @@
 
 如何导入项目请参照 [jitpack](https://jitpack.io/#OpenEdgn/TaskManager).
 
-一个简单的示例如下所示：
-
-```kotlin
-
-```
+一个简单的示例： [samples.kt](/task-fifo/src/test/kotlin/samples/samples.kt) .
 
 更多示例代码在 [Samples](/task-fifo/src/test/kotlin/samples) 目录下.
 
