@@ -1,6 +1,7 @@
 package i.task.modules.fifo
 
 import i.task.ITask
+import i.task.ITaskFinishRunner
 import i.task.ITaskGroupOptions
 import i.task.TaskCallBack
 import i.task.TaskException
@@ -13,7 +14,6 @@ import org.slf4j.Marker
 import org.slf4j.MarkerFactory
 import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -123,13 +123,13 @@ class FIFOTaskGroup<RES : Any>(
         }
     }
 
-    override fun callBack(threadPool: ExecutorService, error: Optional<Throwable>) {
+    override fun callBack(runner: ITaskFinishRunner, error: Optional<Throwable>) {
         if (fail.get()) {
-            threadPool.submit {
+            runner.submit {
                 call.fail(error.get())
             }
         } else {
-            threadPool.submit {
+            runner.submit {
                 call.success(lastTaskResult<RES>().get())
             }
         }

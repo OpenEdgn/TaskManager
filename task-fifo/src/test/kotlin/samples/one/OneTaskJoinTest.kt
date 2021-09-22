@@ -2,9 +2,10 @@ package samples.one
 
 import i.task.ITask
 import i.task.ITaskContext
-import i.task.TaskCallBack
 import i.task.TaskRollbackInfo
+import i.task.extra.taskManager
 import i.task.modules.fifo.FIFOTaskManager
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
@@ -18,12 +19,15 @@ class OneTaskJoinTest : ITask<String> {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val mgr = FIFOTaskManager()
-            val value = mgr.submit<String>(
-                "first", listOf(OneTaskJoinTest()), TaskCallBack.join()
-            ).value
-            logger.info("同步获取返回值：{}", value.get())
-            mgr.shutdown()
+            taskManager(FIFOTaskManager).apply {
+                val value = submit<String>("first")
+                    .append(OneTaskJoinTest())
+                    .join().submit().value
+                logger.info("同步获取返回值：{}", value.get())
+                assertEquals("OK", value.get())
+
+                shutdown()
+            }
         }
     }
 

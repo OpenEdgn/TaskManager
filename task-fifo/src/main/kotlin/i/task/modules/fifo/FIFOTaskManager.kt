@@ -1,6 +1,7 @@
 package i.task.modules.fifo
 
 import i.task.ITask
+import i.task.ITaskFinishRunner
 import i.task.ITaskInfo
 import i.task.ITaskManager
 import i.task.ITaskStatus
@@ -8,11 +9,11 @@ import i.task.TaskCallBack
 import i.task.TaskException
 import i.task.TaskRollbackInfo
 import i.task.TaskRollbackInfo.RollbackType
+import i.task.extra.TaskManagerFeature
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 import java.util.Collections
 import java.util.Optional
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadFactory
@@ -27,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock
 class FIFOTaskManager(
     override val name: String = "FIFO",
     threadFactory: ThreadFactory = Executors.defaultThreadFactory(),
-    threadPool: ExecutorService = Executors.newCachedThreadPool()
+    private val runner: ITaskFinishRunner
 ) : ITaskManager, ITaskInfo {
     private val marker = MarkerFactory.getMarker("任务管理器：\"$name\"")
 
@@ -35,7 +36,6 @@ class FIFOTaskManager(
     private val lock = ReentrantLock()
     private val condition = lock.newCondition() // 锁
     private val taskGroups = LinkedBlockingDeque<IFIFOTaskGroup<Any>>() // 任务组
-    private val callBackThreadPool: ExecutorService = threadPool // 任务回调执行线程
     private val tasks = Collections.synchronizedSet(HashSet<ITask<*>>())
 
     init {
@@ -61,7 +61,7 @@ class FIFOTaskManager(
      */
     private fun clear() {
         logger.debug(marker, "任务管理器实例已退出.")
-        callBackThreadPool.shutdown()
+        runner.shutdown()
     }
 
     private fun runTaskGroup() { // 任务队列
@@ -94,7 +94,7 @@ class FIFOTaskManager(
             }
         }
         taskGroup.callBack(
-            callBackThreadPool, error
+            runner, error
         )
         condition.tryLock {
             tasks.removeAll(taskGroup.tasks)
@@ -158,7 +158,28 @@ class FIFOTaskManager(
         }
     }
 
-    companion object {
+    class Config : TaskManagerFeature.Configuration {
+        override var name: String = "FIFO"
+        var threadFactory: ThreadFactory = Executors.defaultThreadFactory()
+        var runner: ITaskFinishRunner = InternalTaskFinishRunner()
+    }
+
+    internal class InternalTaskFinishRunner : ITaskFinishRunner {
+        private val threadPool = Executors.newCachedThreadPool()
+        override fun submit(runnable: Runnable) {
+            threadPool.submit(runnable)
+        }
+
+        override fun shutdown() {
+            threadPool.shutdown()
+        }
+    }
+
+    companion object Feature : TaskManagerFeature<FIFOTaskManager, Config> {
+        override val config: Config = Config()
         private val logger = LoggerFactory.getLogger(FIFOTaskManager::class.java)
+        override fun newTaskManager(config: Config): FIFOTaskManager {
+            return FIFOTaskManager(config.name, config.threadFactory, config.runner)
+        }
     }
 }

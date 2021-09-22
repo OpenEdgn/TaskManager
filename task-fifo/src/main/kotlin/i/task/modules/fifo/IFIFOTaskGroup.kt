@@ -1,10 +1,10 @@
 package i.task.modules.fifo
 
 import i.task.ITask
+import i.task.ITaskFinishRunner
 import i.task.TaskRollbackInfo
 import java.io.Closeable
 import java.util.Optional
-import java.util.concurrent.ExecutorService
 
 /**
  * 一组任务
@@ -42,5 +42,5 @@ interface IFIFOTaskGroup<RES : Any> : Runnable, Closeable {
     /**
      * 要求子任务处理回调
      */
-    fun callBack(threadPool: ExecutorService, error: Optional<Throwable>)
+    fun callBack(runner: ITaskFinishRunner, error: Optional<Throwable>)
 }

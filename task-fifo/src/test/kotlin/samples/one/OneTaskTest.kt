@@ -2,8 +2,8 @@ package samples.one
 
 import i.task.ITask
 import i.task.ITaskContext
-import i.task.TaskCallBack
 import i.task.TaskRollbackInfo
+import i.task.extra.taskManager
 import i.task.modules.fifo.FIFOTaskManager
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
@@ -18,14 +18,14 @@ class OneTaskTest : ITask<String> {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val mgr = FIFOTaskManager()
-            mgr.submit<String>(
-                "first", listOf(OneTaskTest()),
-                TaskCallBack.success {
-                    logger.info("任务回调完成！返回: {}", it)
-                }
-            )
-            mgr.shutdown()
+            taskManager(FIFOTaskManager).apply {
+                submit<String>("first")
+                    .append(OneTaskTest())
+                    .success {
+                        logger.info("任务回调完成！返回: {}", it)
+                    }.submit()
+                shutdown()
+            }
         }
     }
 

@@ -5,6 +5,7 @@ plugins {
     `maven-publish`
     id("org.jlleitschuh.gradle.ktlint")
 }
+
 java.sourceCompatibility = JavaVersion.VERSION_11
 
 val compileKotlin: KotlinCompile by tasks
@@ -20,7 +21,6 @@ dependencies {
     implementation(kotlin("reflect"))
     implementation(kotlin("stdlib"))
     implementation(project(":task-core"))
-    implementation(project(":task-extra"))
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
     testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
@@ -28,10 +28,8 @@ dependencies {
 }
 
 tasks.test {
-
     useJUnitPlatform()
     testLogging {
-
         events("passed", "skipped", "failed")
     }
 }
