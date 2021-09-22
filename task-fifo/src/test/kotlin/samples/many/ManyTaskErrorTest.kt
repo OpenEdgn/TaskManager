@@ -3,6 +3,7 @@ package samples.many
 import i.task.ITaskContext
 import i.task.TaskCallBack
 import i.task.modules.fifo.FIFOTaskManager
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 class ManyTaskErrorTest {
@@ -35,5 +36,10 @@ class ManyTaskErrorTest {
             logger.info(marker, "启动B任务")
             throw RuntimeException("触发任务回滚.")
         }
+    }
+
+    @Test
+    fun test() {
+        main(arrayOf())
     }
 }

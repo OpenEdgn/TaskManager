@@ -3,6 +3,7 @@ package samples.many
 import i.task.ITaskContext
 import i.task.TaskCallBack
 import i.task.modules.fifo.FIFOTaskManager
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 class ManyTaskUserExitTest {
@@ -48,5 +49,10 @@ class ManyTaskUserExitTest {
             Thread.sleep(4000)
             return "second"
         }
+    }
+
+    @Test
+    fun test() {
+        main(arrayOf())
     }
 }

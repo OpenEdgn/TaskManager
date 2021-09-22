@@ -5,6 +5,7 @@ import i.task.ITaskContext
 import i.task.TaskCallBack
 import i.task.TaskRollbackInfo
 import i.task.modules.fifo.FIFOTaskManager
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 /**
@@ -48,5 +49,10 @@ class OneTaskJoinTest : ITask<String> {
 
     override fun close() {
         logger.info("任务结束")
+    }
+
+    @Test
+    fun test() {
+        main(arrayOf())
     }
 }
