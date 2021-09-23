@@ -1,9 +1,9 @@
 package i.task.modules.fifo
 
 import i.task.ITask
+import i.task.ITaskCallBack
 import i.task.ITaskFinishRunner
-import i.task.ITaskGroupOptions
-import i.task.TaskCallBack
+import i.task.ITaskGroupConfiguration
 import i.task.TaskException
 import i.task.TaskException.CheckFailException
 import i.task.TaskRollbackInfo
@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger
 class FIFOTaskGroup<RES : Any>(
     override val name: String,
     override val tasks: List<ITask<*>>,
-    private val call: TaskCallBack<RES>
-) : IFIFOTaskGroup<RES>, ITaskGroupOptions {
+    private val call: ITaskCallBack<RES>
+) : IFIFOTaskGroup<RES>, ITaskGroupConfiguration {
     private val marker: Marker by lazy {
         MarkerFactory.getMarker("任务组：\"$name\"")
     }
@@ -112,6 +112,7 @@ class FIFOTaskGroup<RES : Any>(
             for (value in (0 until last).reversed()) {
                 try {
                     val fifoTask = tasksWrapper[value]
+                    logger.debug(marker, "回滚任务 \"{}\".", fifoTask.key)
                     if ((last - 1) == value) {
                         fifoTask.task.rollback(info)
                     } else {
@@ -146,7 +147,9 @@ class FIFOTaskGroup<RES : Any>(
             logger.debug(marker, "开始销毁任务.")
             for (value in (0 until tasksWrapper.size).reversed()) {
                 try {
-                    tasksWrapper[value].task.close()
+                    val task = tasksWrapper[value].task
+                    logger.debug(marker, "销毁任务 \"{}\".", task.key)
+                    task.close()
                     // 清除缓存
                 } catch (e: Throwable) {
                 }

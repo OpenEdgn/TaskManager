@@ -1,12 +1,12 @@
 package i.task
 
-/**
- * 任务管理
- */
-interface ITaskOptions {
+import kotlin.reflect.KClass
+import kotlin.reflect.full.primaryConstructor
 
-    /**
-     * 更新任务进度
-     */
-    fun updateProcess(process: Float)
+interface ITaskOptions {
+    val listOptions: List<ITaskOption<*>>
+
+    fun <T : Any> newOption(clazz: KClass<out ITaskOption<T>>, value: T): ITaskOption<T> {
+        return clazz.primaryConstructor!!.call(value)
+    }
 }

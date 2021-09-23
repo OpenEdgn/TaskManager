@@ -5,7 +5,7 @@ import java.util.Optional
 /**
  * 任务组上下文
  */
-interface ITaskGroupOptions {
+interface ITaskGroupConfiguration {
     /**
      * 任务组共享数据
      */

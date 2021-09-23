@@ -1,19 +1,21 @@
 package i.task.extra
 
 import i.task.ITask
+import i.task.ITaskCallBack
 import i.task.ITaskInfo
 import i.task.ITaskManager
+import i.task.ITaskOption
+import i.task.ITaskOptions
 import i.task.ITaskStatus
-import i.task.TaskCallBack
 
 /**
  * 抽象化任务管理器
  *
  */
-class TaskManager<CFG : TaskManagerFeature.Configuration>(
-    feature: TaskManagerFeature<out ITaskManager, CFG>,
+class TaskManager<CFG : TaskManagerFeature.Configuration, OPT : ITaskOptions>(
+    feature: TaskManagerFeature<OPT, out ITaskManager<OPT>, CFG>,
     config: CFG.() -> Unit = {}
-) : ITaskManager {
+) : ITaskManager<OPT> {
     private val taskManagerImpl = kotlin.run {
         val cfg = feature.config
         config(cfg)
@@ -24,15 +26,23 @@ class TaskManager<CFG : TaskManagerFeature.Configuration>(
     override val taskInfo: ITaskInfo
         get() = taskManagerImpl.taskInfo
 
-    override fun <RES : Any> submit(name: String, task: List<ITask<*>>, call: TaskCallBack<RES>): ITaskStatus<RES> {
-        return taskManagerImpl.submit(name, task, call)
+    override fun <RES : Any> submit(
+        name: String,
+        task: List<ITask<*>>,
+        options: List<ITaskOption<*>>,
+        call: ITaskCallBack<RES>
+    ): ITaskStatus<RES> {
+        return taskManagerImpl.submit(name, task, options, call)
     }
 
-    fun <T : Any> submit(task: ITask<T>, callBack: TaskCallBack<T>): ITaskStatus<T> {
-        return submit(task.key, listOf(task), callBack)
+    override val options: OPT
+        get() = taskManagerImpl.options
+
+    fun <T : Any> submit(task: ITask<T>, callBack: ITaskCallBack<T>): ITaskStatus<T> {
+        return submit(task.key, listOf(task), emptyList(), callBack)
     }
 
-    fun <RES : Any> submit(name: String) = TaskGroupBuilder<RES>(this, name)
+    fun <RES : Any> submit(name: String) = TaskGroupBuilder<OPT, RES>(this, name)
 
     override fun shutdown() {
         taskManagerImpl.shutdown()

@@ -1,15 +1,18 @@
 package i.task.modules.fifo
 
 import i.task.ITask
+import i.task.ITaskCallBack
 import i.task.ITaskFinishRunner
 import i.task.ITaskInfo
 import i.task.ITaskManager
+import i.task.ITaskOption
 import i.task.ITaskStatus
-import i.task.TaskCallBack
 import i.task.TaskException
 import i.task.TaskRollbackInfo
 import i.task.TaskRollbackInfo.RollbackType
+import i.task.TaskStatus
 import i.task.extra.TaskManagerFeature
+import i.task.options.WaitFinishOption
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 import java.util.Collections
@@ -29,7 +32,7 @@ class FIFOTaskManager(
     override val name: String = "FIFO",
     threadFactory: ThreadFactory = Executors.defaultThreadFactory(),
     private val runner: ITaskFinishRunner
-) : ITaskManager, ITaskInfo {
+) : ITaskManager<FIFOOptions>, ITaskInfo {
     private val marker = MarkerFactory.getMarker("任务管理器：\"$name\"")
 
     private val shutdown = AtomicBoolean(false)
@@ -105,7 +108,8 @@ class FIFOTaskManager(
     override fun <RES : Any> submit(
         name: String,
         task: List<ITask<*>>,
-        call: TaskCallBack<RES>
+        options: List<ITaskOption<*>>,
+        call: ITaskCallBack<RES>
     ): ITaskStatus<RES> {
         val result = condition.tryLock {
             if (task.isEmpty()) {
@@ -126,9 +130,16 @@ class FIFOTaskManager(
                 throw RuntimeException("某些任务已存在于队列中，在此任务停止之前不允许添加相同任务！")
             }
         }
-        call.putHook(result)
+
+        if (this.options.getConfig(options, WaitFinishOption::class)) {
+            while (result.status != TaskStatus.FINISH && result.status != TaskStatus.ERROR) {
+                Thread.sleep(50)
+            }
+        }
         return result
     }
+
+    override val options: FIFOOptions = FIFOOptions
 
     override fun shutdown() = condition.tryLock {
         logger.debug(marker, "收到销毁信号，从此刻开始不再接收新任务.")
@@ -175,7 +186,7 @@ class FIFOTaskManager(
         }
     }
 
-    companion object Feature : TaskManagerFeature<FIFOTaskManager, Config> {
+    companion object Feature : TaskManagerFeature<FIFOOptions, FIFOTaskManager, Config> {
         override val config: Config = Config()
         private val logger = LoggerFactory.getLogger(FIFOTaskManager::class.java)
         override fun newTaskManager(config: Config): FIFOTaskManager {

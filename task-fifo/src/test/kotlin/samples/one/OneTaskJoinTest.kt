@@ -22,7 +22,8 @@ class OneTaskJoinTest : ITask<String> {
             taskManager(FIFOTaskManager).apply {
                 val value = submit<String>("first")
                     .append(OneTaskJoinTest())
-                    .join().submit().value
+                    .putOption(options.WAIT_FINISH, true)
+                    .submit().value
                 logger.info("同步获取返回值：{}", value.get())
                 assertEquals("OK", value.get())
 
