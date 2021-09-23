@@ -22,6 +22,7 @@ abstract class SimpleTask<T : Any>(override val key: String) : ITask<T> {
         return true
     }
 
+    override val lock = HashSet<String>()
     override fun rollback(info: TaskRollbackInfo) {
     }
 

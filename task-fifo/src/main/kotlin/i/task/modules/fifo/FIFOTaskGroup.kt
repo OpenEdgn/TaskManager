@@ -110,8 +110,8 @@ class FIFOTaskGroup<RES : Any>(
             status = TaskStatus.ERROR
             val anotherInfo = TaskRollbackInfo(anotherError, info.error)
             for (value in (0 until last).reversed()) {
+                val fifoTask = tasksWrapper[value]
                 try {
-                    val fifoTask = tasksWrapper[value]
                     logger.debug(marker, "回滚任务 \"{}\".", fifoTask.key)
                     if ((last - 1) == value) {
                         fifoTask.task.rollback(info)
@@ -119,6 +119,7 @@ class FIFOTaskGroup<RES : Any>(
                         fifoTask.task.rollback(anotherInfo)
                     }
                 } catch (e: Throwable) {
+                    logger.error(marker, "回滚任务 {} 时发生错误.", fifoTask.key, e)
                 }
             }
         }

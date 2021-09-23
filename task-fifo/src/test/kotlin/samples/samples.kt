@@ -11,10 +11,15 @@ fun main() {
     val taskManager = taskManager(FIFOTaskManager) {
         name = "hello-task-manager"
     } // 创建任务
-    taskManager.submit<String>("hello-tasks")
+    taskManager.submit<Int>("hello-tasks")
         .append(PutUserTask("dragon")) // 提交任务
         .append(CheckUserTask())
         .append(CheckAgeTask())
+        .success {
+            println("任务成功!返回：$it.")
+        }.fail {
+            println("任务失败")
+        }
         .submit()
     taskManager.shutdown()
 }
@@ -37,7 +42,7 @@ class CheckUserTask : SimpleUnitTask("user.task.check") {
 
     override fun run(context: ITaskContext) {
         logger.info(marker, "名称合法！")
-        context.currentGroup.properties["user.age"] = 17
+        context.currentGroup.properties["user.age"] = 16
     }
 
     override fun rollback(info: TaskRollbackInfo) {
@@ -49,13 +54,14 @@ class CheckUserTask : SimpleUnitTask("user.task.check") {
     }
 }
 
-class CheckAgeTask : SimpleUnitTask("user.task.check.age") {
+class CheckAgeTask : SimpleTask<Int>("user.task.check.age") {
     override fun check(context: ITaskContext): Boolean {
-        return context.currentGroup.properties["user.age"] as Int >= 18
+        return context.currentGroup.getProperty<Int>("user.age") >= 18
     }
 
-    override fun run(context: ITaskContext) {
+    override fun run(context: ITaskContext): Int {
         logger.info(marker, "年龄符合要求！")
+        return context.currentGroup.getProperty("user.age")
     }
 
     override fun rollback(info: TaskRollbackInfo) {

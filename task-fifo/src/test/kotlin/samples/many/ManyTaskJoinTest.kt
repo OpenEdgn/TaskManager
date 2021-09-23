@@ -49,7 +49,7 @@ class ManyTaskJoinTest {
     class TaskC : SimpleTask<String>("taskC") {
         override fun run(context: ITaskContext): String {
             logger.info(marker, "上个任务回调：{}", context.currentGroup.lastTaskResult<Any>())
-            logger.info(marker, "启动B任务")
+            logger.info(marker, "启动C任务")
             Thread.sleep(500)
             return "second"
         }

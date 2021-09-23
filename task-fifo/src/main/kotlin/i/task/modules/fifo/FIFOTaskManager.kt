@@ -13,6 +13,7 @@ import i.task.TaskRollbackInfo.RollbackType
 import i.task.TaskStatus
 import i.task.extra.TaskManagerFeature
 import i.task.options.WaitFinishOption
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 import java.util.Collections
@@ -176,10 +177,12 @@ class FIFOTaskManager(
     }
 
     internal class InternalTaskFinishRunner : ITaskFinishRunner {
+        private val callLogger: Logger = LoggerFactory.getLogger(ITaskFinishRunner::class.java)
         override fun submit(runnable: Runnable) {
             try {
                 runnable.run()
             } catch (e: Exception) {
+                callLogger.error("回调发生错误. 注意：任务不会回滚，请自行处理.", e)
             }
         }
 

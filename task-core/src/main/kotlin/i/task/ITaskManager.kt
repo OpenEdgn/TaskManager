@@ -32,6 +32,9 @@ interface ITaskManager<Option : ITaskOptions> {
         call: ITaskCallBack<RES>
     ): ITaskStatus<RES>
 
+    /**
+     * 提交任务时可选选项
+     */
     val options: Option
 
     /**

@@ -11,6 +11,11 @@ interface ITaskGroupConfiguration {
      */
     val properties: MutableMap<String, Any>
 
+    /**
+     *
+     * 从 `properties` 下获取信息
+     *
+     */
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getProperty(key: String, defaultValue: T? = null): T {
         return (properties[key] ?: defaultValue ?: throw NullPointerException("key : $key not found.")) as T

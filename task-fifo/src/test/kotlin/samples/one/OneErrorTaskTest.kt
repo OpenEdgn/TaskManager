@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory
  */
 class OneErrorTaskTest : ITask<String> {
 
+    override val lock = emptySet<String>()
+
     companion object {
         private val logger = LoggerFactory.getLogger(OneErrorTaskTest::class.java)
 

@@ -16,6 +16,15 @@ interface ITask<T : Any> : Closeable, Serializable {
     val key: String
 
     /**
+     * 独占ID
+     *
+     * 如果一组任务的id与另一组任务id相交，则会强制要求串行执行
+     *
+     * 注意，id 需在任务提交前装入完成
+     */
+    val lock: Set<String>
+
+    /**
      * 任务前置测试
      *
      * 可复写此方法来控制任务是否执行，此方法在任务启动前调用

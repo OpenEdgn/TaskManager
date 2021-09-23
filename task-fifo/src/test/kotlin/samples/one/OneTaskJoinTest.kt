@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
  * 单个任务发布测试
  */
 class OneTaskJoinTest : ITask<String> {
+    override val lock = emptySet<String>()
 
     companion object {
         private val logger = LoggerFactory.getLogger(OneTaskJoinTest::class.java)
