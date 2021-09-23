@@ -176,18 +176,20 @@ class FIFOTaskManager(
     }
 
     internal class InternalTaskFinishRunner : ITaskFinishRunner {
-        private val threadPool = Executors.newCachedThreadPool()
         override fun submit(runnable: Runnable) {
-            threadPool.submit(runnable)
+            try {
+                runnable.run()
+            } catch (e: Exception) {
+            }
         }
 
         override fun shutdown() {
-            threadPool.shutdown()
         }
     }
 
     companion object Feature : TaskManagerFeature<FIFOOptions, FIFOTaskManager, Config> {
-        override val config: Config = Config()
+        override val config: Config
+            get() = Config()
         private val logger = LoggerFactory.getLogger(FIFOTaskManager::class.java)
         override fun newTaskManager(config: Config): FIFOTaskManager {
             return FIFOTaskManager(config.name, config.threadFactory, config.runner)

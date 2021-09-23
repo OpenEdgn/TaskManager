@@ -12,7 +12,9 @@ class ManyTaskJoinTest {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            taskManager(FIFOTaskManager).apply {
+            taskManager(FIFOTaskManager) {
+                name = "fifo-test"
+            }.apply {
                 val value = submit<String>("test")
                     .append(TaskA())
                     .append(TaskB())
