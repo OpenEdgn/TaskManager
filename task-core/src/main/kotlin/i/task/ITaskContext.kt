@@ -1,16 +1,17 @@
 package i.task
 
 /**
- * 任务上下文
+ * 任务管理器上下文
+ *
  */
 interface ITaskContext {
     /**
      *  管理当前任务组信息
      */
-    val currentGroup: ITaskGroupConfiguration
+    val currentGroup: ITaskGroupOption
 
     /**
      * 管理当前任务信息
      */
-    val currentTask: ITaskConfiguration
+    val currentTask: ITaskOption
 }

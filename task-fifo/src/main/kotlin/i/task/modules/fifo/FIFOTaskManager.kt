@@ -1,18 +1,17 @@
 package i.task.modules.fifo
 
 import i.task.ITask
-import i.task.ITaskCallBack
-import i.task.ITaskFinishRunner
-import i.task.ITaskInfo
+import i.task.ITaskHook
 import i.task.ITaskManager
-import i.task.ITaskOption
+import i.task.ITaskManagerInfo
 import i.task.ITaskStatus
+import i.task.ITaskSubmitOption
 import i.task.TaskException
 import i.task.TaskRollbackInfo
 import i.task.TaskRollbackInfo.RollbackType
 import i.task.TaskStatus
 import i.task.extra.TaskManagerFeature
-import i.task.options.WaitFinishOption
+import i.task.options.WaitFinishTaskOption
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
@@ -23,6 +22,7 @@ import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.reflect.KClass
 
 /**
  * 先进先出单线程串行任务调度算法
@@ -33,7 +33,7 @@ class FIFOTaskManager(
     override val name: String = "FIFO",
     threadFactory: ThreadFactory = Executors.defaultThreadFactory(),
     private val runner: ITaskFinishRunner
-) : ITaskManager<FIFOOptions>, ITaskInfo {
+) : ITaskManager<FIFOSubmitOptions>, ITaskManagerInfo {
     private val marker = MarkerFactory.getMarker("任务管理器：\"$name\"")
 
     private val shutdown = AtomicBoolean(false)
@@ -73,6 +73,7 @@ class FIFOTaskManager(
         val taskGroup: IFIFOTaskGroup<Any> = taskGroups.pollFirst() ?: return
         try {
             taskGroup.run() // 执行任务
+            taskGroup.comment() // 提交任务结果
         } catch (e: Throwable) {
             try { // 发生错误，触发任务回滚
                 logger.debug(marker, "任务组 \"{}\" 发生错误：\"{}\"，执行回滚.", taskGroup.name, e.message ?: "")
@@ -109,8 +110,8 @@ class FIFOTaskManager(
     override fun <RES : Any> submit(
         name: String,
         task: List<ITask<*>>,
-        options: List<ITaskOption<*>>,
-        call: ITaskCallBack<RES>
+        options: Map<KClass<out ITaskSubmitOption<*>>, Any>,
+        call: ITaskHook<RES>
     ): ITaskStatus<RES> {
         val result = condition.tryLock {
             if (task.isEmpty()) {
@@ -132,7 +133,7 @@ class FIFOTaskManager(
             }
         }
 
-        if (this.options.getConfig(options, WaitFinishOption::class)) {
+        if (this.options.getConfig(options, WaitFinishTaskOption::class)) {
             while (result.status != TaskStatus.FINISH && result.status != TaskStatus.ERROR) {
                 Thread.sleep(50)
             }
@@ -140,7 +141,7 @@ class FIFOTaskManager(
         return result
     }
 
-    override val options: FIFOOptions = FIFOOptions
+    override val options: FIFOSubmitOptions = FIFOSubmitOptions
 
     override fun shutdown() = condition.tryLock {
         logger.debug(marker, "收到销毁信号，从此刻开始不再接收新任务.")
@@ -163,7 +164,7 @@ class FIFOTaskManager(
             taskGroups.forEach { size += it.size }
             return size
         }
-    override val taskInfo: ITaskInfo = this
+    override val taskInfo: ITaskManagerInfo = this
     private fun <T : Any?> Any.tryLock(function: () -> T): T {
         return synchronized(this) {
             function()
@@ -190,7 +191,7 @@ class FIFOTaskManager(
         }
     }
 
-    companion object Feature : TaskManagerFeature<FIFOOptions, FIFOTaskManager, Config> {
+    companion object Feature : TaskManagerFeature<FIFOSubmitOptions, FIFOTaskManager, Config> {
         override val config: Config
             get() = Config()
         private val logger = LoggerFactory.getLogger(FIFOTaskManager::class.java)

@@ -1,8 +1,13 @@
 package i.task
 
 /**
- * 任务提交设置
+ * 任务管理
  */
-abstract class ITaskOption<TYPE : Any>(val value: TYPE) {
-    abstract val key: String
+interface ITaskOption {
+
+    /**
+     * 更新任务进度
+     * 最小 0，最大 1f
+     */
+    fun updateProcess(process: Float)
 }

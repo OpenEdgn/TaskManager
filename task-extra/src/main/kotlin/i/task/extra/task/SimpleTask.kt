@@ -12,11 +12,11 @@ import org.slf4j.MarkerFactory
  * 创建简单的任务
  *
  * @param T : Any 任务返回值
- * @property key String 任务ID
+ * @property name String 任务ID
  * @constructor
  */
-abstract class SimpleTask<T : Any>(override val key: String) : ITask<T> {
-    protected val marker: Marker by lazy { MarkerFactory.getMarker("Task:$key") }
+abstract class SimpleTask<T : Any>(override val name: String) : ITask<T> {
+    protected val marker: Marker by lazy { MarkerFactory.getMarker("Task:$name") }
     protected val logger: Logger by lazy { LoggerFactory.getLogger(javaClass) }
     override fun check(context: ITaskContext): Boolean {
         return true
@@ -24,6 +24,9 @@ abstract class SimpleTask<T : Any>(override val key: String) : ITask<T> {
 
     override val lock = HashSet<String>()
     override fun rollback(info: TaskRollbackInfo) {
+    }
+
+    override fun submit(context: ITaskContext, data: T) {
     }
 
     override fun close() {

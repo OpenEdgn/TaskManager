@@ -24,6 +24,10 @@ interface ITaskStatus<RES : Any> {
     /**
      * 撤销/终止任务
      *
+     * 当任务正在执行或处于准备队列中时，
+     * 使用此函数将标记任务组终止执行,
+     *
+     *
      */
     fun cancel()
 }

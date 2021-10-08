@@ -1,9 +1,11 @@
 package i.task
 
+import kotlin.reflect.KClass
+
 /**
  * 任务调度管理器
  */
-interface ITaskManager<Option : ITaskOptions> {
+interface ITaskManager<Option : ITaskSubmitOptions> {
     /**
      * 任务管理器名称
      */
@@ -13,7 +15,7 @@ interface ITaskManager<Option : ITaskOptions> {
      * 获取任务信息
      *
      */
-    val taskInfo: ITaskInfo
+    val taskInfo: ITaskManagerInfo
 
     /**
      * 提交一组串行任务
@@ -28,8 +30,8 @@ interface ITaskManager<Option : ITaskOptions> {
     fun <RES : Any> submit(
         name: String,
         task: List<ITask<*>>,
-        options: List<ITaskOption<*>>,
-        call: ITaskCallBack<RES>
+        options: Map<KClass<out ITaskSubmitOption<*>>, Any>,
+        call: ITaskHook<RES>
     ): ITaskStatus<RES>
 
     /**

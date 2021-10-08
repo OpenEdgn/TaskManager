@@ -8,19 +8,17 @@ import java.io.Serializable
  * 注意：任务实例应可以被序列化和反序列化
  */
 interface ITask<T : Any> : Closeable, Serializable {
-
     /**
-     * 任务名称，确定任务唯一性的标志
+     * 任务名称，无特殊含义
      */
-
-    val key: String
+    val name: String
 
     /**
-     * 独占ID
+     * 互斥锁ID
      *
-     * 如果一组任务的id与另一组任务id相交，则会强制要求串行执行
+     * 表明任务需锁定的资源代号，保证多个任务组下的任务不会发生资源竞争
      *
-     * 注意，id 需在任务提交前装入完成
+     * 注意，id 需在任务提交前初始化完成
      */
     val lock: Set<String>
 
@@ -35,22 +33,30 @@ interface ITask<T : Any> : Closeable, Serializable {
     /**
      * 任务执行函数
      *
-     *  任务执行函数，可返回值让下一个任务或者回调获取
-     *  如果任务发生错误将触发回滚
+     *  任务在此函数下执行任务，可返回值让下一个任务或者回调获取
+     *  如果任务发生错误将导致任务组异常退出，不会触发回滚，请勿在此函数下执行持久化操作！
      */
     fun run(context: ITaskContext): T
 
     /**
+     * 任务结果提交
+     *
+     * 当一组任务执行完成后，触发提交操作，如果提交过程中出现问题将触发回滚
+     *
+     */
+    fun submit(context: ITaskContext, data: T)
+
+    /**
      * 任务回滚函数
      *
-     * 当一组任务发生错误时，调用此函数进行回滚，此函数产生的错误将被忽略
+     * 当一组任务发生错误时，将回调此函数进行回滚，此函数抛出的错误不会影响后续任务执行
      */
     fun rollback(info: TaskRollbackInfo)
 
     /**
      * 任务销毁函数
      *
-     * 当任务成功或回滚后将调用此函数，此函数产生的错误将被忽略
+     * 当任务成功或回滚后将回调此函数，此函数产生的错误不会影响后续任务执行
      */
     override fun close()
 }

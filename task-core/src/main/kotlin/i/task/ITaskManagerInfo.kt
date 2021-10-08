@@ -3,7 +3,7 @@ package i.task
 /**
  * 任务管理器信息
  */
-interface ITaskInfo {
+interface ITaskManagerInfo {
     /**
      * 任务总体进度
      */

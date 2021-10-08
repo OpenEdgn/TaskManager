@@ -1,24 +1,24 @@
 package i.task.extra
 
 import i.task.ITask
-import i.task.ITaskCallBack
+import i.task.ITaskHook
 import i.task.ITaskManager
-import i.task.ITaskOption
-import i.task.ITaskOptions
 import i.task.ITaskStatus
+import i.task.ITaskSubmitOption
+import i.task.ITaskSubmitOptions
 import java.util.concurrent.ConcurrentLinkedDeque
 import kotlin.reflect.KClass
 
-class TaskGroupBuilder<OPT : ITaskOptions, RES : Any>(
+class TaskGroupBuilder<OPT : ITaskSubmitOptions, RES : Any>(
     private val taskManager: ITaskManager<OPT>,
     private val name: String
 ) {
     class TaskCallback<RES : Any>(
         override var success: (RES) -> Unit = {},
         override var fail: (Throwable) -> Unit = {}
-    ) : ITaskCallBack<RES>
+    ) : ITaskHook<RES>
 
-    private val options: MutableList<ITaskOption<*>> = mutableListOf()
+    private val options: MutableMap<KClass<out ITaskSubmitOption<*>>, Any> = mutableMapOf()
     private val callBack = TaskCallback<RES>()
     private val tasks = ConcurrentLinkedDeque<ITask<out Any>>()
     fun append(vararg task: ITask<out Any>) = kotlin.run {
@@ -26,13 +26,8 @@ class TaskGroupBuilder<OPT : ITaskOptions, RES : Any>(
         this
     }
 
-    fun putOption(vararg option: ITaskOption<*>) = kotlin.run {
-        options.addAll(option)
-        this
-    }
-
-    fun <T : Any> putOption(clazz: KClass<out ITaskOption<T>>, data: T) = kotlin.run {
-        putOption(taskManager.options.newOption(clazz, data))
+    fun <T : Any> putOption(clazz: KClass<out ITaskSubmitOption<T>>, data: T) = kotlin.run {
+        options[clazz] = data
         this
     }
 

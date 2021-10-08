@@ -1,7 +1,6 @@
 package i.task.modules.fifo
 
 import i.task.ITask
-import i.task.ITaskFinishRunner
 import i.task.TaskRollbackInfo
 import java.io.Closeable
 import java.util.Optional
@@ -43,4 +42,9 @@ interface IFIFOTaskGroup<RES : Any> : Runnable, Closeable {
      * 要求子任务处理回调
      */
     fun callBack(runner: ITaskFinishRunner, error: Optional<Throwable>)
+
+    /**
+     * 提交任务结果
+     */
+    fun comment()
 }
