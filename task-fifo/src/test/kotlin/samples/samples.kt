@@ -24,7 +24,7 @@ fun main() {
     taskManager.shutdown()
 }
 
-class PutUserTask(private val name: String) : SimpleTask<String>("user.task") {
+class PutUserTask(override val name: String) : SimpleTask<String>("user.task") {
     override fun run(context: ITaskContext): String {
         logger.info(marker, "姓名：{}.", name)
         context.currentGroup.properties["user.name"] = name
@@ -46,11 +46,7 @@ class CheckUserTask : SimpleUnitTask("user.task.check") {
     }
 
     override fun rollback(info: TaskRollbackInfo) {
-        if (info.isCurrentError) {
-            logger.error(marker, "发生错误，名称不合法！")
-        } else {
-            logger.info(marker, "其他原因导致回滚.")
-        }
+        logger.info(marker, "其他原因导致回滚.")
     }
 }
 
@@ -65,10 +61,6 @@ class CheckAgeTask : SimpleTask<Int>("user.task.check.age") {
     }
 
     override fun rollback(info: TaskRollbackInfo) {
-        if (info.isCurrentError) {
-            logger.error(marker, "发生错误 ,年龄不符合要求！")
-        } else {
-            logger.info(marker, "其他原因导致回滚.")
-        }
+        logger.info(marker, "其他原因导致回滚.")
     }
 }

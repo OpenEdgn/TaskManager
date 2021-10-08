@@ -19,16 +19,31 @@ data class TaskRollbackInfo(
 ) {
 
     enum class RollbackType {
-        CURRENT_CHECK_ERROR,
-        OTHER_CHECK_ERROR,
-        CURRENT_RUN_ERROR,
-        OTHER_RUN_ERROR,
-        USER_CANCEL
+        CHECK_ERROR,
+        RUN_ERROR,
+        COMMENT_ERROR,
+        USER_RUN_CANCEL,
+        USER_COMMENT_CANCEL
     }
 
-    val isCurrentError: Boolean
+    val isRunError: Boolean
         get() = type in listOf(
-            RollbackType.CURRENT_CHECK_ERROR,
-            RollbackType.CURRENT_RUN_ERROR,
+            RollbackType.RUN_ERROR,
+        )
+    val isCheckError: Boolean
+        get() = type in listOf(
+            RollbackType.CHECK_ERROR,
+        )
+    val isCommentError: Boolean
+        get() = type in listOf(
+            RollbackType.COMMENT_ERROR,
+        )
+    val isUserRunCancel: Boolean
+        get() = type in listOf(
+            RollbackType.USER_RUN_CANCEL,
+        )
+    val isUserCommentCancel: Boolean
+        get() = type in listOf(
+            RollbackType.USER_COMMENT_CANCEL,
         )
 }

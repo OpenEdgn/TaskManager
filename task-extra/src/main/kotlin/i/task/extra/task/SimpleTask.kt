@@ -29,6 +29,6 @@ abstract class SimpleTask<T : Any>(override val name: String) : ITask<T> {
     override fun submit(context: ITaskContext, data: T) {
     }
 
-    override fun close() {
+    override fun close(finish: Boolean) {
     }
 }

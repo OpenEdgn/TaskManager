@@ -75,30 +75,48 @@ class FIFOTaskManager(
             taskGroup.run() // 执行任务
             taskGroup.comment() // 提交任务结果
         } catch (e: Throwable) {
-            try { // 发生错误，触发任务回滚
-                logger.debug(marker, "任务组 \"{}\" 发生错误：\"{}\"，执行回滚.", taskGroup.name, e.message ?: "")
-                error = Optional.of(e)
-                val type = when (e) {
-                    is TaskException.CheckFailException -> {
-                        RollbackType.CURRENT_CHECK_ERROR
-                    }
-                    is TaskException.UserExitException -> {
-                        RollbackType.USER_CANCEL
-                    }
-                    else -> {
-                        RollbackType.CURRENT_RUN_ERROR
-                    }
+            val type = when (e) {
+                is TaskException.CheckFailException -> {
+                    error = Optional.of(e)
+                    RollbackType.CHECK_ERROR
+                    // 检查错误
                 }
-                taskGroup.cancel(TaskRollbackInfo(type, error))
-            } catch (_: Throwable) {
+                is TaskException.CheckThrowException -> {
+                    error = Optional.of(e.error)
+                    RollbackType.CHECK_ERROR
+                    // 检查错误
+                }
+                is TaskException.CommentFailException -> {
+                    error = Optional.of(e.error)
+                    RollbackType.COMMENT_ERROR
+                    // 任务提交错误
+                }
+                is TaskException.RunFailException -> {
+                    error = Optional.of(e.error)
+                    RollbackType.RUN_ERROR
+                    // 任务执行时错误
+                }
+                is TaskException.UserRunExitException -> {
+                    error = Optional.of(e)
+                    RollbackType.USER_RUN_CANCEL
+                    // 用户手动触发
+                }
+                is TaskException.UserCommentExitException -> {
+                    error = Optional.of(e)
+                    RollbackType.USER_COMMENT_CANCEL
+                    // 用户手动触发
+                }
+                else -> {
+                    throw RuntimeException("程序发生未捕获的错误！", e)
+                }
             }
+            // 发生错误，触发任务回滚
+            logger.debug(marker, "任务组 \"{}\" 发生错误：\"{}\"，执行回滚.", taskGroup.name, e.message ?: "")
+            taskGroup.error(TaskRollbackInfo(type, error)) // 触发任务退出事件
         } finally {
-            try {
-                taskGroup.close()
-            } catch (_: Throwable) {
-            }
+            taskGroup.close(error.isEmpty) // 触发任务组销毁
         }
-        taskGroup.callBack(
+        taskGroup.hook(
             runner, error
         )
         condition.tryLock {
@@ -122,19 +140,19 @@ class FIFOTaskManager(
             }
             if (Collections.disjoint(this.tasks, task)) { // 排除重复任务
                 this.tasks.addAll(task)
-                val fifoTaskGroup = FIFOTaskGroup(name, task, call)
+                val fifoTaskGroup = FIFOTaskGroup(name, task as List<ITask<Any>>, call)
                 taskGroups.addLast(fifoTaskGroup as IFIFOTaskGroup<Any>)
                 lock.lock()
                 condition.signalAll()
                 lock.unlock()
-                fifoTaskGroup.taskStatusCall
+                FIFOTaskStatus(fifoTaskGroup)
             } else {
                 throw RuntimeException("某些任务已存在于队列中，在此任务停止之前不允许添加相同任务！")
             }
         }
 
         if (this.options.getConfig(options, WaitFinishTaskOption::class)) {
-            while (result.status != TaskStatus.FINISH && result.status != TaskStatus.ERROR) {
+            while (result.status != TaskStatus.FINISH) {
                 Thread.sleep(50)
             }
         }
