@@ -1,17 +1,13 @@
 package i.task
 
 /**
- * 任务管理器上下文
- *
+ * 当前任务上下文
  */
 interface ITaskContext {
-    /**
-     *  管理当前任务组信息
-     */
-    val currentGroup: ITaskGroupOption
 
     /**
-     * 管理当前任务信息
+     * 更新任务进度
+     * 最小 0，最大 1f
      */
-    val currentTask: ITaskOption
+    fun updateProcess(process: Float)
 }

@@ -1,7 +1,7 @@
 package i.task.extra
 
+import i.task.ITaskGroupOptions
 import i.task.ITaskManager
-import i.task.ITaskSubmitOptions
 
 /**
  * 抽象化任务管理器创建者
@@ -10,7 +10,7 @@ import i.task.ITaskSubmitOptions
  * @param CFG : TaskManagerFeature.Configuration
  * @property config CFG
  */
-interface TaskManagerFeature<OPT : ITaskSubmitOptions, MGR : ITaskManager<OPT>, CFG : TaskManagerFeature.Configuration> {
+interface TaskManagerFeature<OPT : ITaskGroupOptions, MGR : ITaskManager<OPT>, CFG : TaskManagerFeature.Configuration> {
     val config: CFG
 
     fun newTaskManager(config: CFG): MGR

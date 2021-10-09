@@ -1,5 +1,8 @@
 package i.task
 
+/**
+ * 异常抛出
+ */
 open class TaskException(override val message: String) : RuntimeException(message) {
     class CheckFailException(task: ITask<*>) : TaskException("任务 ${task.name} 自检未通过")
     class CheckThrowException(task: ITask<*>, val error: Throwable) : TaskException("任务 ${task.name} 自检时发生异常")

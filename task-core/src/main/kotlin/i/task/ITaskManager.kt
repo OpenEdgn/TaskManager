@@ -5,7 +5,7 @@ import kotlin.reflect.KClass
 /**
  * 任务调度管理器
  */
-interface ITaskManager<Option : ITaskSubmitOptions> {
+interface ITaskManager<Options : ITaskGroupOptions> {
     /**
      * 任务管理器名称
      */
@@ -30,18 +30,23 @@ interface ITaskManager<Option : ITaskSubmitOptions> {
     fun <RES : Any> submit(
         name: String,
         task: List<ITask<*>>,
-        options: Map<KClass<out ITaskSubmitOption<*>>, Any>,
-        call: ITaskHook<RES>
-    ): ITaskStatus<RES>
+        options: Map<KClass<out ITaskGroupOption<*>>, Any>,
+        call: ITaskGroupFinishHook<RES>
+    ): ITaskGroupResult<RES>
 
     /**
      * 提交任务时可选选项
      */
-    val options: Option
+    val options: Options
 
     /**
      * 不再接收新任务，等待执行完成后退出
      */
 
     fun shutdown()
+
+    /**
+     * 立即清除所有未执行的任务，已执行的任务等待其继续执行
+     */
+    fun shutdownNow()
 }

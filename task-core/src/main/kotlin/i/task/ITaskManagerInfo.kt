@@ -10,7 +10,7 @@ interface ITaskManagerInfo {
     val process: Float
 
     /**
-     * 任务数目 （包括正在运行）
+     * 任务组数目 （包括正在运行）
      */
     val size: Int
 }

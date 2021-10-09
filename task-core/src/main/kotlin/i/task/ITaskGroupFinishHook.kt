@@ -9,7 +9,7 @@ package i.task
  * @property success Function1<RES, Unit> 成功回调函数
  * @property fail Function1<Throwable, Unit> 失败回调函数
  */
-interface ITaskHook<RES : Any> {
+interface ITaskGroupFinishHook<RES : Any> {
     val success: (RES) -> Unit
     val fail: (Throwable) -> Unit
 }

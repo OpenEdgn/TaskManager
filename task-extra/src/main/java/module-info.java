@@ -7,4 +7,6 @@ module edgn.utils.task.extra {
     exports i.task.extra;
     opens i.task.extra.task;
     exports i.task.extra.task;
+    opens i.task.extra.options;
+    exports i.task.extra.options;
 }

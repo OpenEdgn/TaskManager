@@ -5,11 +5,11 @@ import java.util.Optional
 /**
  * 任务信息
  */
-interface ITaskStatus<RES : Any> {
+interface ITaskGroupResult<RES : Any> {
     /**
      * 任务当前状态
      */
-    val status: TaskStatus
+    val status: TaskGroupStatus
 
     /**
      * 获取任务结果

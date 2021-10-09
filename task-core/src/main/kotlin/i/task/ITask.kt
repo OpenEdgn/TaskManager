@@ -1,12 +1,9 @@
 package i.task
 
-import java.io.Serializable
-
 /**
  * 任务实例
- * 注意：任务实例应可以被序列化和反序列化
  */
-interface ITask<T : Any> : Serializable {
+interface ITask<T : Any> {
     /**
      * 任务名称，无特殊含义
      */
@@ -28,7 +25,7 @@ interface ITask<T : Any> : Serializable {
      * 如果返回 false 则表示任务无法执行，将任务组错误，并触发回滚
      * 请勿在此函数执行任何写入操作
      */
-    fun check(context: ITaskContext): Boolean
+    fun check(context: ITaskManagerContext): Boolean
 
     /**
      * 任务执行函数
@@ -38,7 +35,7 @@ interface ITask<T : Any> : Serializable {
      *  如需清除创建的中间内容可在 `close` 方法下处理
      *  请勿在此函数下执行任何不可恢复的操作！
      */
-    fun run(context: ITaskContext): T
+    fun run(context: ITaskManagerContext): T
 
     /**
      * 任务结果提交
@@ -47,14 +44,14 @@ interface ITask<T : Any> : Serializable {
      * 如果提交过程中出现问题将触发回滚，
      * 请勿在此函数下执行任何不可恢复的操作！
      */
-    fun submit(context: ITaskContext, data: T)
+    fun submit(context: ITaskManagerContext, data: T)
 
     /**
      * 任务回滚函数
      *
      * 当一组任务发生错误时，将回调此函数进行回滚，此函数抛出的错误不会影响后续任务执行
      */
-    fun rollback(info: TaskRollbackInfo)
+    fun rollback(info: ITaskRollbackInfo)
 
     /**
      * 任务销毁函数

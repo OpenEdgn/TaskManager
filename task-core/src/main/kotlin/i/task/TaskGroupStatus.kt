@@ -1,6 +1,9 @@
 package i.task
 
-enum class TaskStatus {
+/**
+ * 任务状态
+ */
+enum class TaskGroupStatus {
     READY,
     RUNNING,
     FINISH

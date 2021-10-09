@@ -4,6 +4,6 @@ module edgn.utils.task.core {
     requires org.slf4j;
     opens i.task;
     exports i.task;
-    opens i.task.options;
-    exports i.task.options;
+    opens i.task.extra.options;
+    exports i.task.extra.options;
 }
