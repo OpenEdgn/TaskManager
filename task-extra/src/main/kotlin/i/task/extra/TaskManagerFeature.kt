@@ -11,6 +11,9 @@ import i.task.ITaskManager
  * @property config CFG
  */
 interface TaskManagerFeature<OPT : ITaskGroupOptions, MGR : ITaskManager<OPT>, CFG : TaskManagerFeature.Configuration> {
+    /**
+     * 默认配置
+     */
     val config: CFG
 
     fun newTaskManager(config: CFG): MGR
