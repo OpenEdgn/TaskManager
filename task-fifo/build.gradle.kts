@@ -15,14 +15,14 @@ java {
     modularity.inferModulePath.set(true)
 }
 
-val slf4jVersion = rootProject.ext.get("versions.slf4j")
+val logger4kVersion = rootProject.ext.get("versions.logger4k")
 dependencies {
     implementation(kotlin("reflect"))
     implementation(kotlin("stdlib"))
     implementation(project(":task-core"))
     implementation(project(":task-extra"))
-    implementation("org.slf4j:slf4j-api:$slf4jVersion")
-    testImplementation("org.slf4j:slf4j-simple:$slf4jVersion")
+    implementation("com.github.OpenEdgn.Logger4K:logger-core:$logger4kVersion")
+    testImplementation("com.github.OpenEdgn.Logger4K:logger-console:$logger4kVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:5.6.2")
     testImplementation("org.junit.platform:junit-platform-launcher:1.6.2")
 }

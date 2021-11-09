@@ -3,7 +3,7 @@ package i.task
 /**
  * 任务状态
  */
-enum class TaskGroupStatus {
+enum class TaskStatus {
     READY,
     RUNNING,
     FINISH

@@ -5,6 +5,9 @@ buildscript {
         mavenLocal()
         gradlePluginPortal()
         mavenCentral()
+        maven {
+            setUrl("https://jitpack.io")
+        }
     }
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.31")
@@ -17,6 +20,9 @@ allprojects {
         mavenLocal()
         gradlePluginPortal()
         mavenCentral()
+        maven {
+            setUrl("https://jitpack.io")
+        }
     }
 }
 

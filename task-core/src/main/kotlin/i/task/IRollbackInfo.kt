@@ -3,12 +3,12 @@ package i.task
 /**
  *  日志错误回滚原因信息
  */
-interface ITaskRollbackInfo {
+interface IRollbackInfo {
 
     /**
      * 回滚触发原因
      */
-    val type: TaskRollbackType
+    val type: RollbackType
 
     /**
      * 回滚触发详情

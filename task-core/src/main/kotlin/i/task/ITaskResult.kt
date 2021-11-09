@@ -5,21 +5,16 @@ import java.util.Optional
 /**
  * 任务信息
  */
-interface ITaskGroupResult<RES : Any> {
+interface ITaskResult<RES : Any> {
     /**
      * 任务当前状态
      */
-    val status: TaskGroupStatus
+    val status: TaskStatus
 
     /**
      * 获取任务结果
      */
     val value: Optional<RES>
-
-    /**
-     * 任务进度
-     */
-    val process: Float
 
     /**
      * 撤销/终止任务

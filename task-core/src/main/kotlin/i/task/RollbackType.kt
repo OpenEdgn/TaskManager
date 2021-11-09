@@ -3,7 +3,7 @@ package i.task
 /**
  * 任务回滚原因
  */
-enum class TaskRollbackType {
+enum class RollbackType {
     CHECK_ERROR,
     RUN_ERROR,
     COMMENT_ERROR,
