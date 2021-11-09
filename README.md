@@ -10,16 +10,16 @@
 ## 特性
 
 1. 开箱即用
-2. 极其精简，仅依赖于 [SLF4J](http://www.slf4j.org/) 和 [Kotlin](https://kotlinlang.org/)
+2. 极其精简，仅依赖于 [Logger4K](https://github.com/OpenEdgn/Logger4K) 和 [Kotlin](https://kotlinlang.org/)
 3. 针对常用方法覆盖测试用例
 
 ## 快速开始
 
 如何导入项目请参照 [jitpack](https://jitpack.io/#OpenEdgn/TaskManager).
 
-一个简单的示例： [samples.kt](/task-fifo/src/test/kotlin/samples/samples.kt) .
+[comment]: <> (一个简单的示例： [samples.kt]&#40;/task-fifo/src/test/kotlin/samples/samples.kt&#41; .)
 
-更多示例代码在 [Samples](/task-fifo/src/test/kotlin/samples) 目录下.
+[comment]: <> (更多示例代码在 [Samples]&#40;/task-fifo/src/test/kotlin/samples&#41; 目录下.)
 
 ## 贡献
 
